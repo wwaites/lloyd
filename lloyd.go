@@ -15,6 +15,7 @@ import (
 var seed int64
 var intensity int
 var iterations int
+var matrix bool
 
 func PoissonVoronoi(rng *rand.Rand, n int) []voronoi.Vertex {
 	vertices := make([]voronoi.Vertex, 0, n)
@@ -35,14 +36,14 @@ func (h Histogram)Count(n int) {
 	}
 }
 
-func (h Histogram)Print(w io.Writer, pfx string) {
+func (h Histogram)Print(w io.Writer, pfx string, n int) {
 	var keys []int
 	for k := range h {
     keys = append(keys, k)
 	}
 	sort.Ints(keys)
 	for _, k := range keys {
-    fmt.Fprintf(w, "%s%d\t%d\n", pfx, k, h[k])
+    fmt.Fprintf(w, "%s%d\t%f\n", pfx, k, float64(h[k]) / float64(n))
 	}
 }
 
@@ -107,6 +108,7 @@ func init() {
 	flag.Int64Var(&seed, "s", 0, "random seed")
 	flag.IntVar(&intensity, "i", 1000, "intensity")
 	flag.IntVar(&iterations, "n", 10, "iterations")
+	flag.BoolVar(&matrix, "m", false, "output transition matrix")
 	flag.Usage = func () {
 		fmt.Fprintf(os.Stderr, "\nPoisson Voronoi\n===============\n\n")
 		fmt.Fprintf(os.Stderr, "Generate distributions of polygons resulting from repeated\napplications of Lloyd's algorithm.\n\n")
@@ -136,16 +138,18 @@ func main() {
 			newp[id] = nedges
 		}
 
-		if i > 0 {
+		if matrix && i > 0 {
 			trans := polygons.Transitions(newp)
-			ft := mat64.Formatted(trans, mat64.DotByte('.'), mat64.Squeeze())
+			ft := mat64.Formatted(trans, mat64.Squeeze())
 			fmt.Fprintf(os.Stdout, "%v\n\n", ft)
 		}
 		polygons = newp
 
-		pfx := fmt.Sprintf("%d\t", i)
-		hist.Print(os.Stdout, pfx)
-		fmt.Fprintf(os.Stdout, "\n")
+		if !matrix {
+			pfx := fmt.Sprintf("%d\t", i)
+			hist.Print(os.Stdout, pfx, intensity)
+			fmt.Fprintf(os.Stdout, "\n")
+		}
 		vertices = vu.LloydRelaxation(diagram.Cells)
 		diagram = voronoi.ComputeDiagram(vertices, bbox, true)
 	}

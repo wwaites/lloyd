@@ -1,0 +1,12 @@
+#!/bin/sh
+
+./lloyd -n 50 -i 10000 > lloyd-10k
+./lloyd -n 50 -i 100000 > lloyd-100k
+./lloyd -n 50 -i 250000 > lloyd-250k
+./lloyd -n 50 -i 1000000 > lloyd-1M
+
+./lloyd -m -n 50 -i 10000 | sed -e 's/^.//' -e 's/.$//' > lloyd-10k.mat
+./lloyd -m -n 50 -i 100000 | sed -e 's/^.//' -e 's/.$//' > lloyd-100k.mat
+./lloyd -m -n 50 -i 250000 | sed -e 's/^.//' -e 's/.$//' > lloyd-250k.mat
+./lloyd -m -n 50 -i 1000000 | sed -e 's/^.//' -e 's/.$//' > lloyd-1M.mat
+
